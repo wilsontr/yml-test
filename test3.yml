@@ -1,639 +1,669 @@
-BWMQ_SHA: ca7a6fad18905f11dbf549e9017e060629871762-1d1b7da1857cd513995cc97b8fff716766100aa2-536
-CLAMAV_SHA: 947183ebb555369259205e34802d76eeae873810
-DOCVAULT_SHA: 2d3872831d8e2b1f59a94dd41bc1f9270a5c737f
-DVSERVICE_SHA: 574898f2448e7d0c094f4eec3ce1f7312c4564ea
+NO_LOG: False
+sidecars:
+  - name: fluentd-graylog
+    image: build.learnvest.net:5000/docker-fluentd-graylog:linkedlogging
+    imagePullPolicy: Always
+    volumeMounts:
+      - {name: log, mountPath: /var/log}
+
+configmaps:
+  - name: global
+    data:
+      node-env: PX_DEV
+      graylog-host: "logging"
+      graylog-port: "12201"
+      graylog-environment: px_dev
+      spring-profiles-active: dev
+
+volumes:
+  - {name: log, emptyDir: {}}
+
+volumeMounts:
+  - {name: log, mountPath: /var/log}
+
+etcd-host: &etcd-host
+  {name: ETCD_HOST, value: "{{ETCD_HOST}}"}
+
+zone-com: &com
+  nodeSelector:
+    zone: com
+
+zone-net: &net
+  nodeSelector:
+    zone: net
+
+zone-green: &green
+  nodeSelector:
+    zone: green
+
+secrets:
+  - name: foo
+    data:
+      foo: "Zm9vCg=="
+
+NMLVPXPLANNINGTOOLS_SHA: develop
+NMPXUSERSUMMARY_SHA: latest
 FACTSET_SHA: c149a17a06714eac360d9128d573ad90b8d51861
 FS_ADAPTER_SHA: be96b0bbc143655c75a3fc9c1a492a6923306a8d-436
-KNGINX_SHA: f917cffe3a7b0bf8058e2bb08d4544e05dbfe61d
-NMAPI_SHA: latest
-NMLVPXPLANEDIT_SHA: 3d0c0ab0c802acc2f2ade85a508d512a1dfb0504
-NMLVPXPLANNINGTOOLS_SHA: develop
-NMLV_PREDICTIVE_PLANNING_SHA: e40793a185166d15771a888ea40692a3d1873b73
-NMPXFACTFINDERUI_SHA: f8a90a263bed25488cbffa3303e69a15de911bab
-NMPXPLANHTML_SHA: container2_sha3
-NMPXUSERSUMMARY_SHA: latest
-NO_LOG: false
-PDF_GENERATOR_SHA: nmtest
+PLANNING_SHA: 31e73f8ab7fa260babc54044e6f0c76807ac6436-1d1b7da1857cd513995cc97b8fff716766100aa2-683
 PLANGEN_SHA: 412f35c3974df94567b1f4d67da3bd8a3e7f1eb1-1d1b7da1857cd513995cc97b8fff716766100aa2-185
 PLANHTML_SHA: latest
-PLANNING_SHA: 31e73f8ab7fa260babc54044e6f0c76807ac6436-1d1b7da1857cd513995cc97b8fff716766100aa2-683
 PLAN_OUTPUT_SERVICE_SHA: 0f1a690b3f56fdfd7a24f83db2feb9f5fe9911e2
-configmaps:
-- data:
-    graylog-environment: px_dev
-    graylog-host: logging
-    graylog-port: '12201'
-    node-env: PX_DEV
-    spring-profiles-active: dev
-  name: global
-etcd-host:
-  name: ETCD_HOST
-  value: '{{ETCD_HOST}}'
-secrets:
-- data:
-    foo: Zm9vCg==
-  name: foo
+NMPXPLANHTML_SHA: 8df9baf885b24575409638377049c5acf0f5d113
+NMLVPXPLANEDIT_SHA: 3d0c0ab0c802acc2f2ade85a508d512a1dfb0504
+PDF_GENERATOR_SHA: nmtest
+BWMQ_SHA: ca7a6fad18905f11dbf549e9017e060629871762-1d1b7da1857cd513995cc97b8fff716766100aa2-536
+NMPXFACTFINDERUI_SHA: f8a90a263bed25488cbffa3303e69a15de911bab
+NMAPI_SHA: latest
+DOCVAULT_SHA: 2d3872831d8e2b1f59a94dd41bc1f9270a5c737f
+DVSERVICE_SHA: 574898f2448e7d0c094f4eec3ce1f7312c4564ea
+CLAMAV_SHA: 947183ebb555369259205e34802d76eeae873810
+KNGINX_SHA: f917cffe3a7b0bf8058e2bb08d4544e05dbfe61d
+NMLV_PREDICTIVE_PLANNING_SHA: e40793a185166d15771a888ea40692a3d1873b73
+
 services:
-- containers:
-  - env:
-    - name: ETCD_HOST
-      value: '{{ETCD_HOST}}'
-    - name: ANNOTATION
-      value: com
-    image: build.learnvest.net:5000/knginx:{{ KNGINX_SHA }}
-    imagePullPolicy: Always
-    name: knginx-com
+
+  - name: knginx-com
     ports:
-    - containerPort: 80
-      hostPort: 80
-    - containerPort: 443
-      hostPort: 443
-    - containerPort: 27017
-      hostPort: 27017
-    volumeMounts:
-    - mountPath: /etc/nginx/ssl/server.crt
-      name: ssl-cert
-    - mountPath: /etc/nginx/ssl/server.key
-      name: ssl-key
-  name: knginx-com
-  nodeSelector: &id002
-    zone: com
-  ports:
-  - name: http
-    port: 80
-  - name: https
-    port: 443
-  - name: mongo
-    port: 27017
-  replicas: 2
-  strategy: RollingUpdate
-  volumes:
-  - hostPath:
-      path: /ssl/bundled
-    name: ssl-cert
-  - hostPath:
-      path: /ssl/key
-    name: ssl-key
-- containers:
-  - env:
-    - name: ETCD_HOST
-      value: '{{ETCD_HOST}}'
-    - name: ANNOTATION
-      value: net
-    image: build.learnvest.net:5000/knginx:{{ KNGINX_SHA }}
-    imagePullPolicy: Always
-    name: knginx
+      - {port: 80,  name: http}
+      - {port: 443, name: https}
+      - {port: 27017, name: mongo}
+    replicas: 2
+    <<: *com
+    strategy: RollingUpdate
+    containers:
+      - name: knginx-com
+        image: build.learnvest.net:5000/knginx:{{ KNGINX_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - {containerPort: 80,  hostPort: 80}
+          - {containerPort: 443, hostPort: 443}
+          - {containerPort: 27017, hostPort: 27017}
+        env:
+          - <<: *etcd-host
+          - {name: ANNOTATION, value: "com"}
+        volumeMounts:
+          - {name: ssl-cert, mountPath: /etc/nginx/ssl/server.crt}
+          - {name: ssl-key, mountPath: /etc/nginx/ssl/server.key}
+    volumes:
+      - name: ssl-cert
+        hostPath:
+          path: /ssl/bundled
+      - name: ssl-key
+        hostPath:
+          path: /ssl/key
+
+  - name: knginx-net
     ports:
-    - containerPort: 80
-      hostPort: 80
-    - containerPort: 443
-      hostPort: 443
-    - containerPort: 3306
-      hostPort: 3306
-    - containerPort: 27017
-      hostPort: 27017
-    volumeMounts:
-    - mountPath: /etc/nginx/ssl/server.crt
-      name: ssl-cert
-    - mountPath: /etc/nginx/ssl/server.key
-      name: ssl-key
-  name: knginx-net
-  nodeSelector: &id003
-    zone: net
-  ports:
-  - name: http
-    port: 80
-  - name: https
-    port: 443
-  - name: mysql
-    port: 3306
-  - name: mongo
-    port: 27017
-  replicas: 2
-  strategy: RollingUpdate
-  volumes:
-  - hostPath:
-      path: /ssl/bundled
-    name: ssl-cert
-  - hostPath:
-      path: /ssl/key
-    name: ssl-key
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /resources/planning-tools
-        - /mylv/admin/pwb/
-        server: default
-  containers:
-  - env:
-    - name: ORG_ENV
-      value: nm
-    image: build.learnvest.net:5000/lv-px-planner-tools:{{ NMLVPXPLANNINGTOOLS_SHA
-      }}
-    imagePullPolicy: Always
-    name: nmlv-px-planning-tools
+      - {port: 80,  name: http}
+      - {port: 443, name: https}
+      - {port: 3306, name: mysql}
+      - {port: 27017, name: mongo}
+    replicas: 2
+    <<: *net
+    strategy: RollingUpdate
+    containers:
+      - name: knginx
+        image: build.learnvest.net:5000/knginx:{{ KNGINX_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - {containerPort: 80,  hostPort: 80}
+          - {containerPort: 443, hostPort: 443}
+          - {containerPort: 3306,  hostPort: 3306}
+          - {containerPort: 27017, hostPort: 27017}
+        env:
+          - {name: ETCD_HOST, value: "{{ETCD_HOST}}"}
+          - {name: ANNOTATION, value: "net"}
+        volumeMounts:
+          - name: ssl-cert
+            mountPath: /etc/nginx/ssl/server.crt
+          - name: ssl-key
+            mountPath: /etc/nginx/ssl/server.key
+    volumes:
+      - name: ssl-cert
+        hostPath:
+          path: /ssl/bundled
+      - name: ssl-key
+        hostPath:
+          path: /ssl/key
+
+  - name: nmlv-px-planning-tools
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /resources/planning-tools
+              - /mylv/admin/pwb/
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
     ports:
-    - containerPort: 3300
-  name: nmlv-px-planning-tools
-  nodeSelector: &id001
-    zone: green
-  ports:
-  - name: express
-    port: 3300
-    targetPort: 3300
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /summary/
-        server: default
-  containers:
-  - image: build.learnvest.net:5000/nm-px-user-summary:{{ NMPXUSERSUMMARY_SHA }}
-    imagePullPolicy: Always
-    name: nm-px-user-summary
+      - name: express
+        port: 3300
+        targetPort: 3300
+    containers:
+      - name: nmlv-px-planning-tools
+        image: build.learnvest.net:5000/lv-px-planner-tools:{{ NMLVPXPLANNINGTOOLS_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3300
+        env:
+          - name: ORG_ENV
+            value: nm
+
+
+
+  - name: nm-px-user-summary
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /summary/
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
     ports:
-    - containerPort: 3000
-  name: nm-px-user-summary
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 3000
-    targetPort: 3000
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /service/factset/
-        server: default
-      - locations:
-        - /
-        server: factset.*
-  containers:
-  - env:
-    - name: spring_profiles_active
-      value: dev
-    - name: PRODUCT_MODE
-      value: NM
-    image: build.learnvest.net:5000/factset:{{ FACTSET_SHA }}
-    imagePullPolicy: Always
-    name: factset
-    ports:
-    - containerPort: 8080
-  name: factset
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 8080
-    targetPort: 8080
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /lv-factset-adapter/
-        server: default
-      - locations:
-        - /
-        server: fsadapter.*
-  containers:
-  - env:
-    - name: spring_profiles_active
-      value: dev
-    - name: PRODUCT_MODE
-      value: NM
-    image: build.learnvest.net:5000/lv-factset-adapter:{{ FS_ADAPTER_SHA }}
-    imagePullPolicy: Always
-    name: factset
-    ports:
-    - containerPort: 8080
-  name: lv-factset-adapter
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 8080
-    targetPort: 8080
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /service/planning/
-        server: default
-      - locations:
-        - /
-        server: planning.*
-  containers:
-  - env:
-    - name: spring_profiles_active
-      value: dev
-    - name: PRODUCT_MODE
-      value: NM
-    image: build.learnvest.net:5000/planning:{{ PLANNING_SHA }}
-    imagePullPolicy: Always
-    name: planning
-    ports:
-    - containerPort: 8080
-  name: planning
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 8080
-    targetPort: 8080
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /service/plangen/
-        server: default
-      - locations:
-        - /
-        server: plangen.*
-  containers:
-  - env:
-    - name: spring_profiles_active
-      value: dev
-    - name: PRODUCT_MODE
-      value: NM
-    image: build.learnvest.net:5000/plangen:{{ PLANGEN_SHA }}
-    imagePullPolicy: Always
-    name: planning
-    ports:
-    - containerPort: 8080
-  name: plangen
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 8080
-    targetPort: 8080
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /plan-output-service
-        server: default
-      - locations:
-        - /
-        server: plan-output-service.*
-  containers:
-  - env:
-    - name: spring_profiles_active
-      value: dev
-    - name: PRODUCT_MODE
-      value: NM
-    image: build.learnvest.net:5000/nmlv-px-plan-output-service:{{ PLAN_OUTPUT_SERVICE_SHA
-      }}
-    imagePullPolicy: Always
-    name: nmlv-px-plan-output-service
-    ports:
-    - containerPort: 8080
-  name: plan-output-service
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 8080
-    targetPort: 8080
-  replicas: 1
-  strategy: RollingUpdate
-- containers:
-  - image: build.learnvest.net:5000/planhtml:{{ PLANHTML_SHA }}
-    imagePullPolicy: Always
-    name: planhtml
-    ports:
-    - containerPort: 3000
-  name: v1planhtml
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 3000
-    targetPort: 3000
-  replicas: 1
-  strategy: RollingUpdate
-- containers:
-  - image: build.learnvest.net:5000/nm-px-plan-html:{{ NMPXPLANHTML_SHA }}
-    imagePullPolicy: Always
-    name: nm-px-plan-html
-    ports:
-    - containerPort: 3000
-  name: planhtml
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 3000
-    targetPort: 3000
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /nmlv-px-plan-edit/
-        server: default
-  containers:
-  - image: build.learnvest.net:5000/nmlv-px-plan-edit:{{ NMLVPXPLANEDIT_SHA }}
-    imagePullPolicy: Always
-    name: nmlv-px-plan-edit
-    ports:
-    - containerPort: 3200
-  name: nmlv-px-plan-edit
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 3200
-    targetPort: 3200
-  replicas: 1
-  strategy: RollingUpdate
-- containers:
-  - image: build.learnvest.net:5000/pdf-generator:{{ PDF_GENERATOR_SHA }}
-    imagePullPolicy: Always
-    name: pdf-generator
-    ports:
-    - containerPort: 8080
-  name: pdf-generator
-  nodeSelector: *id001
-  ports:
-  - name: pdf-generator
-    port: 8080
-    targetPort: 8080
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /
-        server: bwmq.*
-  containers:
-  - env:
-    - name: spring_profiles_active
-      value: dev
-    image: build.learnvest.net:5000/bwmq:{{ BWMQ_SHA }}
-    imagePullPolicy: Always
-    name: bwmq
-    ports:
-    - containerPort: 8080
-  name: bwmq
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 8080
-    targetPort: 8080
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /ppmc
-        server: default
-      - locations:
-        - /
-        server: ppmc.*
-  containers:
-  - image: build.learnvest.net:5000/nmlv-predictive-planning:{{ NMLV_PREDICTIVE_PLANNING_SHA
-      }}
-    imagePullPolicy: Always
-    name: nmlv-predictive-planning
-    ports:
-    - containerPort: 8080
-  name: nmlv-predictive-planning
-  nodeSelector: *id001
-  ports:
-  - name: nmlv-predictive-planning
-    port: 8080
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /nm-px-fact-finder-ui/
-        server: default
-  containers:
-  - image: build.learnvest.net:5000/nm-px-fact-finder-ui:{{ NMPXFACTFINDERUI_SHA }}
-    imagePullPolicy: Always
-    name: nm-px-fact-finder-ui
-    ports:
-    - containerPort: 3000
-  name: nm-px-fact-finder-ui
-  nodeSelector: *id001
-  ports:
-  - name: null
-    port: 3000
-    targetPort: 3000
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /px
-        - /header
-        - /footer
-        server: default
-  containers:
-  - env:
-    - name: ENV
-      value: qa
-    image: build.learnvest.net:5000/nmlv-nm-api-gateway:{{ NMAPI_SHA }}
-    imagePullPolicy: Always
-    name: nmapi
-    readinessProbe:
-      httpGet:
-        path: /header/health
-        port: 80
-      initialDelaySeconds: 30
-  name: nmapi
-  nodeSelector: *id001
-  ports:
-  - port: 80
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /secureshare
-        server: default
-  containers:
-  - env:
-    - name: NODE_ENV
-      value: PX_DEV
-    - name: USER_MODE
-      value: px
-    image: build.learnvest.net:5000/nm-doc-vault:{{ DOCVAULT_SHA }}
-    imagePullPolicy: Always
-    name: docvault
-    readinessProbe:
-      httpGet:
-        path: /secureshare
+      - name:
         port: 3000
-      initialDelaySeconds: 30
-  name: docvault
-  nodeSelector: *id001
-  ports:
-  - port: 3000
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /
-        server: dvservice.*
-  containers:
-  - env:
-    - name: SPRING_PROFILES_ACTIVE
-      value: PX_DEV
-    - name: AWS_S3_PLANNER_BUCKET
-      value: nm-doc-vault-planner-dev.learnvest.net
-    - name: AWS_S3_CLIENT_BUCKET
-      value: nm-doc-vault-client-dev.learnvest.net
-    - name: DOC_VAULT_AWS_KEY
-      value: '{{ PX_DEV_ACCESS_KEY }}'
-    - name: DOC_VAULT_AWS_SECRET
-      value: '{{ PX_DEV_ACCESS_SECRET }}'
-    - name: MYSQL_SERVICE_URL
-      value: jdbc:mysql://docvaultdb/docvault
-    - name: MYSQL_SERVICE_USER
-      value: root
-    - name: MYSQL_SERVICE_PASSWORD
-      value: ''
-    image: build.learnvest.net:5000/nm-doc-vault-service:{{ DVSERVICE_SHA }}
-    imagePullPolicy: Always
-    name: dvservice
-    readinessProbe:
-      httpGet:
-        path: /health
-        port: 8080
-      initialDelaySeconds: 30
-  name: dvservice
-  nodeSelector: *id001
-  ports:
-  - port: 8080
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /
-        server: docvaultdb.*
-  containers:
-  - image: build.learnvest.net:5000/docvaultdb:latest
-    imagePullPolicy: Always
-    name: docvaultdb
-  name: docvaultdb
-  nodeSelector: *id001
-  ports:
-  - name: web-interface
-    port: 80
-  - name: mysql
-    port: 3306
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /
-        server: clamav.*
-  containers:
-  - image: build.learnvest.net:5000/nmlv-clam-av-service:{{ CLAMAV_SHA }}
-    imagePullPolicy: Always
-    name: clamav
-  name: clamav
-  nodeSelector: *id001
-  ports:
-  - name: http
-    port: 8080
-  - name: av
-    port: 3310
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - http:
-      - locations:
-        - /jenkins
-        server: clamav-updater.*
-  containers:
-  - env:
-    - name: KMASTER
-      value: '{{kubernetes_master}}'
-    - name: ETCD_HOST
-      value: '{{ETCD_HOST}}'
-    image: build.learnvest.net:5000/nmlv-clam-av-updater:latest
-    imagePullPolicy: Always
-    name: clamav-updater
-    readinessProbe:
-      httpGet:
-        path: /jenkins
-        port: 8080
-      initialDelaySeconds: 30
-  name: clamav-updater
-  nodeSelector: *id001
-  ports:
-  - name: http
-    port: 8080
-  replicas: 1
-  strategy: RollingUpdate
-- annotations:
-    com:
-    - stream:
-      - listen: 27017
-  containers:
-  - image: mongo:3.0.3
-    imagePullPolicy: Always
-    name: mongo
+        targetPort: 3000
+    containers:
+      - name: nm-px-user-summary
+        image: build.learnvest.net:5000/nm-px-user-summary:{{ NMPXUSERSUMMARY_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3000
+
+
+
+  - name: factset
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /service/factset/
+          - server: factset.*
+            locations:
+              - /
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
     ports:
-    - containerPort: 27017
-  name: mongo
-  nodeSelector: *id001
-  ports:
+      - name:
+        port: 8080
+        targetPort: 8080
+    containers:
+      - name: factset
+        image: build.learnvest.net:5000/factset:{{ FACTSET_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+        env:
+          - name: spring_profiles_active
+            value: dev
+          - name: PRODUCT_MODE
+            value: NM
+
+
+
+  - name: lv-factset-adapter
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /lv-factset-adapter/
+          - server: fsadapter.*
+            locations:
+              - /
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name:
+        port: 8080
+        targetPort: 8080
+    containers:
+      - name: factset
+        image: build.learnvest.net:5000/lv-factset-adapter:{{ FS_ADAPTER_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+        env:
+          - name: spring_profiles_active
+            value: dev
+          - name: PRODUCT_MODE
+            value: NM
+
+
+
+  - name: planning
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /service/planning/
+          - server: planning.*
+            locations:
+              - /
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name:
+        port: 8080
+        targetPort: 8080
+    containers:
+      - name: planning
+        image: build.learnvest.net:5000/planning:{{ PLANNING_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+        env:
+          - name: spring_profiles_active
+            value: dev
+          - name: PRODUCT_MODE
+            value: NM
+
+
+
+  - name: plangen
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /service/plangen/
+          - server: plangen.*
+            locations:
+              - /
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name:
+        port: 8080
+        targetPort: 8080
+    containers:
+      - name: planning
+        image: build.learnvest.net:5000/plangen:{{ PLANGEN_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+        env:
+          - name: spring_profiles_active
+            value: dev
+          - name: PRODUCT_MODE
+            value: NM
+
+  - name: plan-output-service
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /plan-output-service
+          - server: plan-output-service.*
+            locations:
+              - /
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name:
+        port: 8080
+        targetPort: 8080
+    containers:
+      - name: nmlv-px-plan-output-service
+        image: build.learnvest.net:5000/nmlv-px-plan-output-service:{{ PLAN_OUTPUT_SERVICE_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+        env:
+          - name: spring_profiles_active
+            value: dev
+          - name: PRODUCT_MODE
+            value: NM
+
+
+  - name: v1planhtml
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name:
+        port: 3000
+        targetPort: 3000
+    containers:
+      - name: planhtml
+        image: build.learnvest.net:5000/planhtml:{{ PLANHTML_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3000
+
+
+
+  - name: planhtml
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name:
+        port: 3000
+        targetPort: 3000
+    containers:
+      - name: nm-px-plan-html
+        image: build.learnvest.net:5000/nm-px-plan-html:{{ NMPXPLANHTML_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3000
+
+  - name: nmlv-px-plan-edit
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /nmlv-px-plan-edit/
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name:
+        port: 3200
+        targetPort: 3200
+    containers:
+      - name: nmlv-px-plan-edit
+        image: build.learnvest.net:5000/nmlv-px-plan-edit:{{ NMLVPXPLANEDIT_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3200
+
+
+  - name: pdf-generator
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name: pdf-generator
+        port: 8080
+        targetPort: 8080
+    containers:
+      - name: pdf-generator
+        image: build.learnvest.net:5000/pdf-generator:{{ PDF_GENERATOR_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+
+
+
+
+  - name: bwmq
+    annotations:
+      com:
+        - http:
+          - server: bwmq.*
+            locations:
+              - /
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name:
+        port: 8080
+        targetPort: 8080
+    containers:
+      - name: bwmq
+        image: build.learnvest.net:5000/bwmq:{{ BWMQ_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+        env:
+          - name: spring_profiles_active
+            value: dev
+
+
+
+  - name: nmlv-predictive-planning
+    strategy: RollingUpdate
+    replicas: 1
+    <<: *green
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /ppmc
+          - server: ppmc.*
+            locations:
+              - /
+    ports:
+      - name: nmlv-predictive-planning
+        port: 8080
+    containers:
+      - name: nmlv-predictive-planning
+        image: build.learnvest.net:5000/nmlv-predictive-planning:{{ NMLV_PREDICTIVE_PLANNING_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+
+
+
+  - name: nm-px-fact-finder-ui
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /nm-px-fact-finder-ui/
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name:
+        port: 3000
+        targetPort: 3000
+    containers:
+      - name: nm-px-fact-finder-ui
+        image: build.learnvest.net:5000/nm-px-fact-finder-ui:{{ NMPXFACTFINDERUI_SHA }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3000
+
+
+
+  - name: nmapi
+    ports:
+      - port: 80
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    annotations:
+      com:
+        - http:
+          - server: default
+            locations:
+              - /px
+              - /header
+              - /footer
+    <<: *green
+    containers:
+      - name: nmapi
+        image: build.learnvest.net:5000/nmlv-nm-api-gateway:{{ NMAPI_SHA }}
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            path: /header/health
+            port: 80
+          initialDelaySeconds: 30
+        env:
+          - {name: ENV, value: qa}
+
+
+
+  - name: docvault
+    ports:
+      - port: 3000
+    <<: *green
+    strategy: RollingUpdate
+    annotations:
+      com:
+        - http:
+            - server: default
+              locations:
+                - /secureshare
+    containers:
+      - name: docvault
+        image: build.learnvest.net:5000/nm-doc-vault:{{ DOCVAULT_SHA }}
+        imagePullPolicy: Always
+        readinessProbe:
+          initialDelaySeconds: 30
+          httpGet:
+            path: /secureshare
+            port: 3000
+        env:
+          - {name: NODE_ENV, value: PX_DEV}
+          - {name: USER_MODE, value: px}
+
+
+
+  - name: dvservice
+    ports:
+      - port: 8080
+    <<: *green
+    strategy: RollingUpdate
+    annotations:
+      com:
+        - http:
+            - server: dvservice.*
+              locations:
+                - /
+    containers:
+      - name: dvservice
+        image: build.learnvest.net:5000/nm-doc-vault-service:{{ DVSERVICE_SHA }}
+        imagePullPolicy: Always
+        readinessProbe:
+          initialDelaySeconds: 30
+          httpGet:
+            path: /health
+            port: 8080
+        env:
+          - {name: SPRING_PROFILES_ACTIVE, value: PX_DEV}
+          - {name: AWS_S3_PLANNER_BUCKET, value: nm-doc-vault-planner-dev.learnvest.net}
+          - {name: AWS_S3_CLIENT_BUCKET, value: nm-doc-vault-client-dev.learnvest.net}
+          - {name: DOC_VAULT_AWS_KEY, value: "{{ PX_DEV_ACCESS_KEY }}"}
+          - {name: DOC_VAULT_AWS_SECRET, value: "{{ PX_DEV_ACCESS_SECRET }}"}
+          - {name: MYSQL_SERVICE_URL, value: "jdbc:mysql://docvaultdb/docvault"}
+          - {name: MYSQL_SERVICE_USER, value: "root"}
+          - {name: MYSQL_SERVICE_PASSWORD, value: ""}
+
+
+
+  - name: docvaultdb
+    ports:
+      - port: 80
+        name: web-interface
+      - port: 3306
+        name: mysql
+    <<: *green
+    strategy: RollingUpdate
+    replicas: 1
+    annotations:
+      com:
+        - http:
+            - server: docvaultdb.*
+              locations:
+                - /
+    containers:
+      - name: docvaultdb
+        image: build.learnvest.net:5000/docvaultdb:latest
+        imagePullPolicy: Always
+
+
+
+  - name: clamav
+    ports:
+      - {name: http, port: 8080}
+      - {name: av,   port: 3310}
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    annotations:
+      com:
+        - http:
+            - server: clamav.*
+              locations:
+                - /
+    containers:
+      - name: clamav
+        image: build.learnvest.net:5000/nmlv-clam-av-service:{{ CLAMAV_SHA }}
+        imagePullPolicy: Always
+
+
+
+  - name: clamav-updater
+    ports:
+      - {name: http, port: 8080}
+    replicas: 1
+    annotations:
+      com:
+        - http:
+            - server: clamav-updater.*
+              locations:
+                - /jenkins
+    <<: *green
+    strategy: RollingUpdate
+    containers:
+      - name: clamav-updater
+        image: build.learnvest.net:5000/nmlv-clam-av-updater:latest
+        imagePullPolicy: Always
+        readinessProbe:
+          initialDelaySeconds: 30
+          httpGet:
+            path: /jenkins
+            port: 8080
+        env:
+          - {name: KMASTER, value: "{{kubernetes_master}}"}
+          - <<: *etcd-host
+
+
+
   - name: mongo
-    port: 27017
-  replicas: 1
-  strategy: RollingUpdate
-- containers:
-  - image: rabbitmq:3.6.0
-    imagePullPolicy: Always
-    name: rabbitmq
+    replicas: 1
+    annotations:
+      com:
+        - stream:
+          - listen: 27017
+    <<: *green
+    strategy: RollingUpdate
     ports:
-    - containerPort: 5672
-      hostPort: 5672
-  name: rabbitmq
-  nodeSelector: *id001
-  ports:
+      - name: mongo
+        port: 27017
+    containers:
+      - name: mongo
+        image: mongo:3.0.3
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 27017
+
+
+
+
   - name: rabbitmq
-    port: 5672
-    targetPort: 5672
-  replicas: 1
-  strategy: RollingUpdate
-sidecars:
-- image: build.learnvest.net:5000/docker-fluentd-graylog:linkedlogging
-  imagePullPolicy: Always
-  name: fluentd-graylog
-  volumeMounts:
-  - mountPath: /var/log
-    name: log
-volumeMounts:
-- mountPath: /var/log
-  name: log
-volumes:
-- emptyDir: {}
-  name: log
-zone-com:
-  nodeSelector: *id002
-zone-green:
-  nodeSelector: *id001
-zone-net:
-  nodeSelector: *id003
+    replicas: 1
+    <<: *green
+    strategy: RollingUpdate
+    ports:
+      - name: rabbitmq
+        port: 5672
+        targetPort: 5672
+    containers:
+      - name: rabbitmq
+        image: rabbitmq:3.6.0
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 5672
+            hostPort: 5672
